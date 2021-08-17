@@ -12,7 +12,8 @@ jobs:
           - docker_image: conanio/gcc9
             gcc_version: 9
             build_arch: x86_64
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     env:
       CONAN_GCC_VERSIONS: ${{ matrix.gcc_version }}
       CONAN_ARCHS: ${{matrix.build_arch}}
@@ -32,3 +33,9 @@ jobs:
         run: ./go fetch ohWafHelpers ohNet ohNetGenerated ohMediaPlayer openssl
       - name: Build the package
         run: cd linux; DISABLE_GTK=0 make -f Makefile.raspbian
+      - name: Upload binary
+        uses: actions/upload-artifact@v2
+        with:
+          name: openhome-player
+          path: linux/raspbian/openhome-player
+          if-no-files-found: error
