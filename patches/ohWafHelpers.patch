@@ -1,0 +1,75 @@
+diff --git a/utilfuncs.py b/utilfuncs.py
+index c7e860f..8907800 100644
+--- a/utilfuncs.py
++++ b/utilfuncs.py
+@@ -55,22 +55,24 @@ def invoke_test(tsk):
+ 
+ def guess_dest_platform():
+     # literally copied (for consistency) from default_platform.py in ohdevtools
+     import platform
+     if platform.system() == 'Windows':
+         return 'Windows-x86'
+     if platform.system() == 'Linux' and platform.architecture()[0] == '32bit' and platform.machine()[0:3] == 'ppc':
+         return 'Linux-ppc32'
+     if platform.system() == 'Linux' and platform.architecture()[0] == '32bit':
+         return 'Linux-x86'
+-    if platform.system() == 'Linux' and platform.architecture()[0] == '64bit':
++    if platform.system() == 'Linux' and platform.architecture()[0] == '64bit' and platform.machine() == 'AMD64':
+         return 'Linux-x64'
++    if platform.system() == 'Linux' and platform.architecture()[0] == '64bit' and platform.machine() in ['arm64', 'aarch64']:
++        return 'Linux-arm64'
+     if platform.system() == 'Darwin':
+         # 32bit Mac support no longer supported on Apple platforms
+         return 'Mac-x64'
+     return None
+ 
+ def is_core_platform(conf):
+     return conf.options.dest_platform in ['Core-ppc32', 'Core-armv5', 'Core-armv6']
+ 
+ def configure_toolchain(conf):
+     import os, sys
+@@ -110,21 +112,21 @@ def configure_toolchain(conf):
+         if conf.options.dest_platform in ['Mac-x64']:
+             conf.env.append_value('CFLAGS', ['-std=gnu89'])
+             conf.env.append_value('CXXFLAGS', ['-std=c++11', '-D_POSIX_C_SOURCE=199309', '-stdlib=libc++'])
+         else:
+             conf.env.append_value('CXXFLAGS', ['-std=c++0x'])
+             conf.env.append_value('LINKFLAGS', '-Wl,--fatal-warnings')
+         # Enable exceptions for all C code
+         conf.env.append_value('CFLAGS', ['-fexceptions'])
+         # Don't enable warnings for C code as its typically third party and written to different standards
+         conf.env.append_value('CXXFLAGS', [
+-                '-fexceptions', '-Wall', '-Werror'])
++                '-fexceptions', '-Wall'])
+ 
+ 
+         if hasattr(conf, 'use_staging_tree'):
+             sysroot = os.path.abspath('./dependencies/' + conf.options.dest_platform + '/staging/')
+             conf.env.append_value('CFLAGS', '--sysroot='+sysroot)
+             conf.env.append_value('CXXFLAGS', '--sysroot='+sysroot)
+             conf.env.append_value('LINKFLAGS', '--sysroot='+sysroot)
+ 
+         if conf.options.dest_platform == 'Linux-mipsel':
+             conf.env.append_value('LINKFLAGS', '-EL')
+@@ -440,20 +442,21 @@ def create_ros_from_dir_tree(bld, src_path, ros_name):
+             fh.write(line)
+     fh.write('</ros>')
+     fh.close()
+     create_ros(bld, ros_src, ros_name + '.ros')
+ 
+ def get_platform_info(dest_platform):
+     platforms = {
+         'Linux-x86': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Linux-x64': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Linux-ARM': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
++        'Linux-arm64': dict(endian='LITTLE', build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Linux-armhf': dict(endian='LITTLE', build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Linux-rpi': dict(endian='LITTLE',   build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Linux-mipsel': dict(endian='LITTLE',build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Linux-ppc32': dict(endian='BIG',    build_platform='linux2', ohnet_plat_dir='Posix'),
+         'Windows-x86': dict(endian='LITTLE', build_platform='win32',  ohnet_plat_dir='Windows'),
+         'Windows-x64': dict(endian='LITTLE', build_platform='win32',  ohnet_plat_dir='Windows'),
+         'Core-ppc32': dict(endian='BIG',     build_platform='linux2', ohnet_plat_dir='Core-ppc32'),
+         'Core-armv5': dict(endian='LITTLE',  build_platform='linux2', ohnet_plat_dir='Core-armv5'),
+         'Core-armv6': dict(endian='LITTLE',  build_platform='linux2', ohnet_plat_dir='Core-armv6'),
+         'Mac-x64': dict(endian='LITTLE',     build_platform='darwin', ohnet_plat_dir='Mac-x64'),

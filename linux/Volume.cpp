@@ -105,7 +105,7 @@ VolumeControl::VolumeControl()
         iElem = snd_mixer_find_selem(iHandle, iSid);
 
         // Quit the loop if control found.
-        if (iElem > NULL)
+        if (iElem != NULL)
         {
             break;
         }

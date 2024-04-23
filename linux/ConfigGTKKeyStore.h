@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <glib.h>
 
 #include <OpenHome/Configuration/BufferPtrCmp.h>

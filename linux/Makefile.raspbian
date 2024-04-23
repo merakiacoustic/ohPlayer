@@ -13,7 +13,7 @@
 #   NVWA_DIR=<source location>:
 #            Integrate a cross platform new/delete leak detector.
 #            Downloadable from http://wyw.dcweb.cn/leakage.htm
-#                     
+#
 
 OSPLATFORM=raspbian
 

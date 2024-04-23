@@ -1003,6 +1003,11 @@ TUint DriverAlsa::PipelineAnimatorMaxBitDepth() const
     return 0;
 }
 
+void DriverAlsa::PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const
+{
+    return;
+}
+
 Msg* DriverAlsa::ProcessMsg(MsgHalt* aMsg)
 {
     aMsg->ReportHalted();

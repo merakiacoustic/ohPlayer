@@ -127,6 +127,7 @@ private: // from IPipelineAnimator
                                        TUint aNumChannels) const override;
     TUint PipelineAnimatorDsdBlockSizeWords() const override;
     TUint PipelineAnimatorMaxBitDepth() const override;
+    void PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const override;
 
     // Start playing the Host Audio
     void startQueue();

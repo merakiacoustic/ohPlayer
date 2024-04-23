@@ -1,0 +1,66 @@
+diff --git a/OpenHome/Media/Protocol/ProtocolHls.cpp b/OpenHome/Media/Protocol/ProtocolHls.cpp
+index 0887ac3..120795e 100644
+--- a/OpenHome/Media/Protocol/ProtocolHls.cpp
++++ b/OpenHome/Media/Protocol/ProtocolHls.cpp
+@@ -11,20 +11,21 @@
+ #include <OpenHome/Private/Parser.h>
+ #include <OpenHome/Private/Ascii.h>
+ #include <OpenHome/Media/Supply.h>
+ #include <OpenHome/SocketHttp.h>
+ #include <OpenHome/Media/Pipeline/Msg.h>
+ #include <OpenHome/Net/Private/Globals.h>
+ #include <OpenHome/Os.h>
+ #include <OpenHome/OsWrapper.h>
+ 
+ #include <algorithm>
++#include <limits>
+ 
+ namespace OpenHome {
+ namespace Media {
+ 
+ class ProtocolHls : public Protocol
+ {
+ private:
+     static const Brn kSchemeHls;
+     static const Brn kSchemeHlsSecure;
+     static const Brn kSchemeHttp;
+diff --git a/thirdparty/libmad-0.15.1b/VERSION b/thirdparty/libmad-0.15.1b/VERSION
+deleted file mode 100644
+index d4e8f64..0000000
+--- a/thirdparty/libmad-0.15.1b/VERSION
++++ /dev/null
+@@ -1,7 +0,0 @@
+-0.15.1b
+-configure.ac:24
+-version.h:25-28
+-msvc++/config.h:99,105,120
+-msvc++/mad.h:41-44
+-
+-Makefile.am:98-100
+diff --git a/wscript b/wscript
+index 33df812..aae2bbb 100755
+--- a/wscript
++++ b/wscript
+@@ -120,21 +120,21 @@ def configure(conf):
+         'thirdparty/fdk-aac/libMpegTPDec/include',
+         'thirdparty/fdk-aac/libPCMutils/include',
+         'thirdparty/fdk-aac/libSBRdec/include',
+         'thirdparty/fdk-aac/libSYS/include'
+         ]
+ 
+     # Setup Mad (mp3) lib options
+     fixed_point_model = 'FPM_INTEL'
+     if conf.options.with_default_fpm:
+         fixed_point_model = 'FPM_DEFAULT'
+-    elif conf.options.dest_platform in ['Linux-ARM', 'Linux-armhf', 'Linux-rpi', 'Core-armv5', 'Core-armv6']:
++    elif conf.options.dest_platform in ['Linux-ARM', 'Linux-armhf', 'Linux-rpi', 'Linux-arm64', 'Core-armv5', 'Core-armv6']:
+         fixed_point_model = 'FPM_DEFAULT' # FIXME: was FPM_ARM, but failing to build on gcc-linaro-5.3.1
+     elif conf.options.dest_platform in ['Linux-ppc32', 'Core-ppc32']:
+         fixed_point_model = 'FPM_PPC'
+     elif conf.options.dest_platform in ['Linux-x64', 'Windows-x64', 'Mac-x64']:
+         fixed_point_model = 'FPM_64BIT'
+     elif conf.options.dest_platform == 'Linux-mipsel':
+         fixed_point_model = 'FPM_MIPS'
+     conf.env.DEFINES_MAD = [fixed_point_model, 'OPT_ACCURACY']
+     conf.env.INCLUDES_MAD = ['thirdparty/libmad-0.15.1b']
+     if conf.options.dest_platform in ['Windows-x86', 'Windows-x64']:

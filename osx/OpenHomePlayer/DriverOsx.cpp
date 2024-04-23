@@ -374,6 +374,11 @@ TUint DriverOsx::PipelineAnimatorMaxBitDepth() const
     return  0;
 }
 
+void DriverOsx::PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const
+{
+    return;
+}
+
 TUint DriverOsx::PipelineAnimatorDsdBlockSizeWords() const
 {
     return 0;

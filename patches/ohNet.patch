@@ -1,0 +1,134 @@
+diff --git a/Makefile b/Makefile
+index f669f47..adbb62c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -192,22 +192,22 @@ endif
+ ifeq ($(platform),IntelMac)
+ 	# Darwin, not ARM -> Intel Mac
+ 	platform ?= IntelMac
+ 	linkopts_ohNet = -Wl,-install_name,@loader_path/libohNet.dylib
+ 	platform_cflags = -DPLATFORM_MACOSX_GNU -arch x86_64 -mmacosx-version-min=10.7
+ 	platform_linkflags = -arch x86_64 -framework CoreFoundation -framework SystemConfiguration -framework IOKit
+ 	osbuilddir = Mac-x64
+ 	openhome_architecture = x64
+ 
+ 	objdir = Build/Obj/$(osbuilddir)/$(build_dir)/
+-	compiler = clang -fPIC -stdlib=libc++ -o $(objdir)
+-	link = clang++ -pthread -stdlib=libc++ $(platform_linkflags)
++	compiler = clang -Wno-deprecated-declarations -fPIC -o $(objdir)
++	link = clang++ -Wno-deprecated-declarations -pthread -stdlib=libc++ $(platform_linkflags)
+ 	ar = ar rc $(objdir)
+ 	openhome_system = Mac
+ endif
+ 
+ ifeq ($(platform), Core-ppc32)
+     # platform == Core1
+     openhome_system = Core
+     openhome_architecture = ppc32
+     endian = BIG
+     platform_cflags = -mcpu=405
+@@ -333,27 +333,27 @@ $(info Building for system ${openhome_system} and architecture ${openhome_archit
+ 
+ 
+ # Macros used by Common.mak
+ native_only ?= no
+ managed_only ?= no
+ no_shared_objects ?= no
+ endian ?= LITTLE
+ cflags_base = $(CFLAGS) -fexceptions -Wall $(version_specific_cflags_third_party) -pipe -D_GNU_SOURCE -D_REENTRANT -DDEFINE_$(endian)_ENDIAN -DDEFINE_TRACE $(debug_specific_cflags) -fvisibility=hidden $(platform_cflags)
+ cflags_third_party = $(cflags_base) -Wno-int-to-pointer-cast
+ ifeq ($(nocpp11), yes)
+-    cppflags = $(cflags_base) -Werror
++    cppflags = $(cflags_base)
+ else ifeq ($(platform),IntelMac)
+-    cppflags = $(cflags_base) -std=c++11 -Werror
++    cppflags = $(cflags_base) -std=c++11
+ else
+-    cppflags = $(cflags_base) -std=c++0x -Werror
++    cppflags = $(cflags_base) -std=c++0x
+ endif
+-cflags = $(cflags_base) -Werror
++cflags = $(cflags_base)
+ inc_build = Build/Include
+ includes = -IBuild/Include/ $(version_specific_includes)
+ bundle_build = Build/Bundles
+ mDNSdir = Build/mDNS
+ osdir ?= Posix
+ objext = o
+ libprefix = lib
+ libext = a
+ sharedlibprefix = lib
+ ifeq ($(MACHINE), Darwin)
+@@ -400,21 +400,21 @@ else
+                 else
+                     libjvm_dir ?= $(JAVA_HOME)/jre/lib/i386/server
+                 endif
+             endif
+         endif
+ 	link_jvm = $(libjvm_dir)/libjvm.so
+ 	javac = $(JAVA_HOME)/bin/javac
+ 	jar = $(JAVA_HOME)/bin/jar
+ endif
+ 
+-java_cflags = $(CFLAGS) -fexceptions -Wall $(platform_java_cflags) $(version_specific_java_cflags) -Werror -pipe -D_GNU_SOURCE -D_REENTRANT -DDEFINE_$(endian)_ENDIAN -DDEFINE_TRACE $(debug_specific_cflags) $(platform_cflags)
++java_cflags = $(CFLAGS) -fexceptions -Wall $(platform_java_cflags) $(version_specific_java_cflags) -pipe -D_GNU_SOURCE -D_REENTRANT -DDEFINE_$(endian)_ENDIAN -DDEFINE_TRACE $(debug_specific_cflags) $(platform_cflags)
+ jarflags = cf
+ dirsep = /
+ prefix = /usr/local
+ installlibdir = $(prefix)/lib/ohNet
+ installincludedir = $(prefix)/include/ohNet
+ installpkgconfdir = $(prefix)/lib/pkgconfig
+ mkdir = mkdir -p
+ rmdir = rm -rf
+ uset4 = no
+ 
+diff --git a/T4Linux.mak b/T4Linux.mak
+index ebf958e..8d6a221 100644
+--- a/T4Linux.mak
++++ b/T4Linux.mak
+@@ -34,41 +34,41 @@ $(toolsDir)Mono.TextTemplating.dll : $(dllsources)
+ 	$(mkdir) $(toolsDir)
+ 	mcs /t:library -out:$(toolsDir)Mono.TextTemplating.dll $(dllsources)
+ 
+  
+ exesources =	OpenHome/Net/T4/TextTemplating/TextTransform/AssemblyInfo.cs \
+                	OpenHome/Net/T4/TextTemplating/TextTransform/Options.cs \
+                	OpenHome/Net/T4/TextTemplating/TextTransform/TextTransform.cs
+ 
+ $(toolsDir)OhNetGen.exe : $(toolsDir)TextTransform.exe OpenHome/Net/T4/OhNetGen.cs
+ 	$(mkdir) $(toolsDir)
+-	dmcs /t:exe /out:$(toolsDir)OhNetGen.exe OpenHome/Net/T4/OhNetGen.cs OpenHome/Net/T4/AssemblyInfo.cs
++	mcs /t:exe /out:$(toolsDir)OhNetGen.exe OpenHome/Net/T4/OhNetGen.cs OpenHome/Net/T4/AssemblyInfo.cs
+ 
+ $(toolsDir)TextTransform.exe : $(toolsDir)Mono.TextTemplating.dll $(exesources)
+ 	$(mkdir) $(toolsDir)
+-	dmcs /t:exe -out:$(toolsDir)TextTransform.exe /r:$(toolsDir)Mono.TextTemplating.dll $(exesources)
++	mcs /t:exe -out:$(toolsDir)TextTransform.exe /r:$(toolsDir)Mono.TextTemplating.dll $(exesources)
+ 
+ $(toolsDir)UpnpServiceDescription.xsd : OpenHome/Net/T4/UpnpServiceXml/UpnpServiceDescription.xsd
+ 	$(mkdir) $(toolsDir)
+ 	rsync OpenHome/Net/T4/UpnpServiceXml/UpnpServiceDescription.xsd $(toolsDir)
+ 
+ $(toolsDir)UpnpServiceTemplate.xsd : OpenHome/Net/T4/UpnpServiceXml/UpnpServiceTemplate.xsd
+ 	$(mkdir) $(toolsDir)
+ 	rsync OpenHome/Net/T4/UpnpServiceXml/UpnpServiceTemplate.xsd $(toolsDir)
+ 
+ xmlsources = 	OpenHome/Net/T4/UpnpServiceXml/AssemblyInfo.cs \
+                	OpenHome/Net/T4/UpnpServiceXml/UpnpServiceXml.cs
+ 
+ $(toolsDir)UpnpServiceXml.dll: $(toolsDir)UpnpServiceDescription.xsd $(toolsDir)UpnpServiceTemplate.xsd $(xmlsources)
+ 	$(mkdir) $(toolsDir)
+-	dmcs -target:library -out:$(upnpServiceXml) $(xmlsources)
++	mcs -target:library -out:$(upnpServiceXml) $(xmlsources)
+ 	
+ upnpservicemake.sources =   OpenHome/Net/T4/UpnpServiceMake/AssemblyInfo.cs \
+                             OpenHome/Net/T4/UpnpServiceMake/UpnpServiceMake.cs
+ 
+ $(toolsDir)UpnpServiceMake.dll : $(upnpservicemake.sources)
+ 	$(mkdir) $(toolsDir)
+-	dmcs -target:library -out:$(upnpServiceMake) $(upnpservicemake.sources)
++	mcs -target:library -out:$(upnpServiceMake) $(upnpservicemake.sources)
+ 
+ clean-t4:
+ 	if test -d $(toolsDir); then $(rmdir) $(toolsDir); fi
+ 
