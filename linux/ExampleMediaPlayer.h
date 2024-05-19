@@ -15,7 +15,7 @@
 namespace OpenHome {
     class Shell;
     class ShellCommandDebug;
-    
+
 namespace Net {
     class DviServerUpnp;
     class DvStack;
@@ -55,7 +55,7 @@ static TBool CompareIPv6Addrs(const TIpAddress addr1,
         && memcmp((TByte*)addr1.iV6[0], (TByte*)addr2.iV6[0], 16) == 0;
 }
 
-    
+
 
 class ExampleMediaPlayer : private Net::IResourceManager
 {

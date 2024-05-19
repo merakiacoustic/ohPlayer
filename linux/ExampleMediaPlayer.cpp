@@ -117,8 +117,9 @@ ExampleMediaPlayer::ExampleMediaPlayer(Net::DvStack& aDvStack,
 
     // create MediaPlayer
     auto mpInit = MediaPlayerInitParams::New(Brn(aRoom), Brn(aProductName), kPrefix);
+    mpInit->EnableConfigApp();
     iMediaPlayer = new MediaPlayer( aDvStack, aCpStack, *iDevice, *iRamStore,
-                                   *iConfigStore, iInitParams,
+                                   *iConfigStore, iInitParams, {},
                                     volumeInit, volumeProfile, *iInfoLogger,
                                     aUdn, mpInit);
 
@@ -386,6 +387,8 @@ void ExampleMediaPlayer::AddConfigApp()
                                           30,
                                           kMaxUiTabs,
                                           kUiSendQueueSize,
+                                          1,
+                                          16,
                                           iRebootHandler);
 
     iAppFramework->Add(iConfigApp,              // iAppFramework takes ownership

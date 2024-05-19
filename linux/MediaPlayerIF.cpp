@@ -111,8 +111,9 @@ void InitAndRunMediaPlayer(gpointer args)
     const TChar    *productRoom = room;
     const TChar    *productName = name;
 
-    Debug::SetLevel(Debug::kPipeline);
+    Debug::SetSeverity(Debug::kSeverityDebug);
     Debug::SetLevel(Debug::kSongcast);
+    Debug::SetLevel(Debug::kPipeline);
     //Debug::SetLevel(Debug::kError);
 
     // Create the library on the supplied subnet.

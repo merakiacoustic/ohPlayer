@@ -1,7 +1,6 @@
 #ifndef HEADER_CONFIGRAMSTORE
 #define HEADER_CONFIGRAMSTORE
 
-#include <OpenHome/Configuration/BufferPtrCmp.h>
 #include <OpenHome/Configuration/IStore.h>
 #include <OpenHome/Private/Thread.h>
 

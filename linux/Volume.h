@@ -19,9 +19,9 @@ public: // from IRebootHandler
 class VolumeProfile : public IVolumeProfile
 {
     static const TUint kVolumeMax = 100;
-    static const TUint kVolumeDefault = 45;
+    static const TUint kVolumeDefault = 40;
     static const TUint kVolumeUnity = 80;
-    static const TUint kVolumeDefaultLimit = 85;
+    static const TUint kVolumeDefaultLimit = 100;
     static const TUint kVolumeStep = 1;
     static const TUint kVolumeMilliDbPerStep = 1024;
     static const TUint kBalanceMax = 12;

@@ -602,7 +602,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohMediaPlayer/include",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNet-Mac-x64-Debug/include/ohnet",
-					"$(PROJECT_DIR)/../dependencies/Mac-x64/openssl/include",
+					"$(PROJECT_DIR)/../dependencies/Mac-x64/libressl/include",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNet-Mac-x64-Debug/include/ohnet",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNetGenerated-Mac-x64-Debug/include/ohnet",
 				);
@@ -613,7 +613,7 @@
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohMediaPlayer/lib",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNet-Mac-x64-Debug/lib",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNetGenerated-Mac-x64-Debug/lib",
-					"$(PROJECT_DIR)/../dependencies/Mac-x64/openssl/lib",
+					"$(PROJECT_DIR)/../dependencies/Mac-x64/libressl/lib",
 				);
 				"OTHER_LDFLAGS[arch=*]" = (
 					"-lCodecAacFdk",
@@ -668,7 +668,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohMediaPlayer/include",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNet-Mac-x64-Release/include/ohnet",
-					"$(PROJECT_DIR)/../dependencies/Mac-x64/openssl/include",
+					"$(PROJECT_DIR)/../dependencies/Mac-x64/libressl/include",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNet-Mac-x64-Release/include/ohnet",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNetGenerated-Mac-x64-Release/include/ohnet",
 				);
@@ -679,7 +679,7 @@
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohMediaPlayer/lib",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNet-Mac-x64-Release/lib",
 					"$(PROJECT_DIR)/../dependencies/Mac-x64/ohNetGenerated-Mac-x64-Release/lib",
-					"$(PROJECT_DIR)/../dependencies/Mac-x64/openssl/lib",
+					"$(PROJECT_DIR)/../dependencies/Mac-x64/libressl/lib",
 				);
 				"OTHER_LDFLAGS[arch=*]" = (
 					"-lCodecAacFdk",

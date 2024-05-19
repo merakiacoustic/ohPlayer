@@ -4,7 +4,6 @@
 
 #include <glib.h>
 
-#include <OpenHome/Configuration/BufferPtrCmp.h>
 #include <OpenHome/Configuration/IStore.h>
 #include <OpenHome/Private/Thread.h>
 

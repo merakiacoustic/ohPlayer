@@ -821,6 +821,7 @@ void ControlPointProxy::CPProduct::sourceIndexChangedEvent()
 
     // Mark the new source as active.
     iCcp.setActiveCp(source);
+    iCcp.cpPlay();
 }
 
 void ControlPointProxy::setActiveCp(Sources newSource)

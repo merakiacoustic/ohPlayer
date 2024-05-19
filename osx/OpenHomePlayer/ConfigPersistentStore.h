@@ -1,6 +1,5 @@
 #pragma once
 
-#include <OpenHome/Configuration/BufferPtrCmp.h>
 #include <OpenHome/Configuration/IStore.h>
 #include <OpenHome/Private/Thread.h>
 
@@ -11,7 +10,7 @@
 namespace OpenHome {
 namespace Configuration {
 
-    
+
 // Provides a registry based read/write store.
 class ConfigPersistentStore : public IStoreReadWrite
 {
