@@ -34,6 +34,14 @@ else
 	export CXX=g++
 fi
 
+if [ "$1" = "--debug" ]; then
+	BUILD_TYPE=Debug
+	OHNET_EXTRA_ARGS="debug=1"
+	OHNETGENERATED_EXTRA_ARGS="debug=1"
+	OHPIPELINE_CONFIGURE_EXTRA_ARGS="--debug"
+	OHPLAYER_EXTRA_ARGS="DEBUG=1"
+fi
+
 #export OHNET_VERSION=1.32.4341 # Original
 #export OHNET_VERSION=ohNet_1.32.4350 # Closest compatible
 #export OHNET_VERSION=ohNet_1.36.5182 # Conan version
@@ -67,7 +75,7 @@ git checkout -- .
 if [ -f $TOPLEVEL/patches/$OHNET_VERSION/ohNet.patch ]; then
 	patch -p1 <$TOPLEVEL/patches/$OHNET_VERSION/ohNet.patch
 fi
-make ohNetDll TestsNative proxies devices bundle $EXTRA_MAKE_FLAGS release=1 uset4=no -j1
+make ohNetDll TestsNative proxies devices bundle $EXTRA_MAKE_FLAGS release=1 uset4=no $OHNET_EXTRA_ARGS -j1
 cd $TOPLEVEL
 
 cd $DEPS_DIR || exit
@@ -82,7 +90,7 @@ mkdir -p dependencies/$HWPLATFORM
 cd $OHNETGENERATED_DIR/dependencies/$HWPLATFORM || exit
 tar xf $DEPS_DIR/ohNet/Build/Bundles/ohNet-$HWPLATFORM-Release.tar.gz
 cd $OHNETGENERATED_DIR
-make make_obj_dir copy_build_includes proxies devices bundle $EXTRA_MAKE_FLAGS release=1 uset4=no -j1
+make make_obj_dir copy_build_includes proxies devices bundle $EXTRA_MAKE_FLAGS release=1 uset4=no $OHNETGENERATED_EXTRA_ARGS -j1
 cd $TOPLEVEL
 
 cd $DEPS_DIR || exit
@@ -125,7 +133,7 @@ if [ ! -L $OHPIPELINE_DIR/dependencies/$HWPLATFORM/libressl ]; then
 	ln -fs $TOPLEVEL/dependencies/$HWPLATFORM/libressl $OHPIPELINE_DIR/dependencies/$HWPLATFORM/
 fi
 cd $OHPIPELINE_DIR
-python2 waf configure
+python2 waf configure "$OHPIPELINE_CONFIGURE_EXTRA_ARGS"
 python2 waf build
 python2 waf bundle
 cd $TOPLEVEL
@@ -138,7 +146,7 @@ tar xf $DEPS_DIR/ohPipeline/build/ohMediaPlayer.tar.gz
 cd $TOPLEVEL
 
 cd linux
-make -f Makefile.ubuntu DISABLE_GTK=1 PLATFORM="$HWPLATFORM"
+make -f Makefile.ubuntu DISABLE_GTK=1 PLATFORM="$HWPLATFORM" "$OHPLAYER_EXTRA_ARGS"
 cd $TOPLEVEL
 
 #conan install . --output-folder=build/$HWPLATFORM/ --build=missing
