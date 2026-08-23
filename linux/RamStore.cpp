@@ -1,4 +1,8 @@
 #include "RamStore.h"
+#include <OpenHome/Av/KvpStore.h>
+#include <OpenHome/Private/Printer.h>
+
+#include <map>
 
 using namespace OpenHome;
 using namespace OpenHome::Av;
@@ -8,17 +12,26 @@ RamStore::RamStore(const Brx& aImageFileName)
 {
 }
 
+typedef struct {
+    uint32_t namesz;
+    uint32_t descsz;
+    uint32_t type;
+    uint8_t data[];
+} ElfNoteSection_t;
+
+extern const ElfNoteSection_t g_note_build_id;
+
 RamStore::~RamStore() {}
 
-// Initialise static, read only properties.
 void RamStore::LoadStaticData(IStoreLoaderStatic& aLoader)
 {
     aLoader.AddStaticItem(StaticDataKey::kBufManufacturerName, "OpenHome");
-    aLoader.AddStaticItem(StaticDataKey::kBufManufacturerInfo, "insert oh info here...");
+    aLoader.AddStaticItem(StaticDataKey::kBufManufacturerInfo, "delescluze.vjf");
     aLoader.AddStaticItem(StaticDataKey::kBufManufacturerUrl, "http://www.openhome.org");
-    aLoader.AddStaticItem(StaticDataKey::kBufManufacturerImageUrl, "http://www.openhome.org/common/images/core/open-home-logo.png");
-    aLoader.AddStaticItem(StaticDataKey::kBufModelName, "OpenHome Media Player (test)");
-    aLoader.AddStaticItem(StaticDataKey::kBufModelInfo, "Example implementation of ohMediaPlayer");
-    aLoader.AddStaticItem(StaticDataKey::kBufModelUrl, "http://www.openhome.org/wiki/OhMedia");
+    aLoader.AddStaticItem(StaticDataKey::kBufManufacturerImageUrl, "http://wiki.openhome.org/mediawiki/skins/openhome/images/logo.png");
+    aLoader.AddStaticItem(StaticDataKey::kBufModelName, "Raspdac Audiophonics");
+    aLoader.AddStaticItem(StaticDataKey::kBufModelInfo, "ohPlayer");
+    aLoader.AddStaticItem(StaticDataKey::kBufModelUrl, "https://github.com/jchassin/ohPlayer");
     aLoader.AddStaticItem(StaticDataKey::kBufModelImageUrl, iImageFileName.CString());
+    aLoader.AddStaticItem(StaticDataKey::kBufModelImageHiresUrl, iImageFileName.CString());
 }

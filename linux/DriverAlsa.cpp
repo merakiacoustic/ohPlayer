@@ -1,3 +1,4 @@
+#include "OhLog.h"
 #include <OpenHome/Private/Printer.h>
 #include <OpenHome/Net/Private/Globals.h>
 #include <OpenHome/OsWrapper.h>
@@ -50,11 +51,11 @@ class PcmProcessorBase : public IPcmProcessor
 protected:
     PcmProcessorBase(IDataSink& aDataSink, Bwx& aBuffer);
 public: // IPcmProcessor
-    virtual void BeginBlock();
+    virtual void BeginBlock() override;
     void ProcessFragment(const Brx& aData, TUint aNumChannels, TUint aSubsampleBytes) override;
     void ProcessSilence(const Brx& aData, TUint aNumChannels, TUint aSubsampleBytes) override;
-    virtual void EndBlock();
-    virtual void Flush();
+    virtual void EndBlock() override;
+    virtual void Flush() override;
 public:
     void SetDuplicateChannel(TBool duplicateChannel);
     void SetBitDepth(TUint bitDepth);
@@ -693,7 +694,7 @@ void DriverAlsa::Pimpl::ProcessDrain()
         auto err = snd_pcm_drain(iHandle);
         if (err < 0)
         {
-            Log::Print("DriverAlsa: snd_pcm_drain() error : %s\n",
+            OhLog::PrintError("DriverAlsa: snd_pcm_drain() error : %s\n",
                        snd_strerror(err));
             ASSERTS();
         }
@@ -703,13 +704,57 @@ void DriverAlsa::Pimpl::ProcessDrain()
 
         if (err < 0)
         {
-            Log::Print("DriverAlsa: snd_pcm_prepare() error : %s\n",
+            OhLog::PrintError("DriverAlsa: snd_pcm_prepare() error : %s\n",
                        snd_strerror(err));
             ASSERTS();
         }
     }
 }
+#if 1
+void DriverAlsa::Pimpl::Write(const Brx& aData)
+{
+    if (iSampleBytes == 0) {
+        OhLog::PrintError("DriverAlsa: invalid sample size\n");
+        return;
+    }
 
+    const TByte* ptr = aData.Ptr();
+    snd_pcm_uframes_t framesRemaining = aData.Bytes() / iSampleBytes;
+
+    while (framesRemaining > 0) {
+        snd_pcm_sframes_t framesWritten =
+            snd_pcm_writei(iHandle, ptr, framesRemaining);
+
+        if (framesWritten < 0) {
+            const int err = snd_pcm_recover(iHandle, framesWritten, 1);
+
+            if (err < 0) {
+                OhLog::PrintError("DriverAlsa: snd_pcm_writei() unrecoverable error: %s\n",
+                                  snd_strerror(err));
+                return;
+            }
+
+            continue;
+        }
+
+        if (framesWritten == 0) {
+            const int err = snd_pcm_wait(iHandle, 1000);
+
+            if (err < 0) {
+                OhLog::PrintError("DriverAlsa: snd_pcm_wait() error: %s\n",
+                                  snd_strerror(err));
+                return;
+            }
+
+            continue;
+        }
+
+        ptr += framesWritten * iSampleBytes;
+        framesRemaining -= framesWritten;
+        iBytesSent += framesWritten * iSampleBytes;
+    }
+}
+#else
 void DriverAlsa::Pimpl::Write(const Brx& aData)
 {
     int err;
@@ -722,7 +767,7 @@ void DriverAlsa::Pimpl::Write(const Brx& aData)
 
         if (err < 0)
         {
-            Log::Print("DriverAlsa: failed to snd_pcm_recover with %s\n",
+            OhLog::PrintError("DriverAlsa: failed to snd_pcm_recover with %s\n",
                        snd_strerror(err));
             ASSERTS();
         }
@@ -735,7 +780,7 @@ void DriverAlsa::Pimpl::Write(const Brx& aData)
 
     if (err < 0)
     {
-        Log::Print("DriverAlsa: snd_pcm_writei() got error %s\n",
+        OhLog::PrintError("DriverAlsa: snd_pcm_writei() got error %s\n",
                    snd_strerror(err));
     }
     else
@@ -743,7 +788,7 @@ void DriverAlsa::Pimpl::Write(const Brx& aData)
         iBytesSent += aData.Bytes();
     }
 }
-
+#endif
 #ifdef DEBUG
 void DriverAlsa::Pimpl::LogPCMState()
 {
@@ -791,7 +836,7 @@ void DriverAlsa::Pimpl::ProcessDecodedStream(MsgDecodedStream* aMsg)
         auto err = snd_pcm_drain(iHandle);
         if (err < 0)
         {
-            Log::Print("DriverAlsa: snd_pcm_drain() error : %s\n",
+            OhLog::PrintError("DriverAlsa: snd_pcm_drain() error : %s\n",
                        snd_strerror(err));
             ASSERTS();
         }
@@ -854,7 +899,7 @@ void DriverAlsa::Pimpl::ProcessDecodedStream(MsgDecodedStream* aMsg)
         }
     }
 
-    Log::Print("DriverAlsa: Could not find a PcmProcessor for stream! "
+    OhLog::PrintWarning("DriverAlsa: Could not find a PcmProcessor for stream! "
                "BitDepth = %d, SampleRate = %d, Channels = %d\n",
                decodedStreamInfo.BitDepth(), decodedStreamInfo.SampleRate(),
                decodedStreamInfo.NumChannels());
@@ -862,69 +907,129 @@ void DriverAlsa::Pimpl::ProcessDecodedStream(MsgDecodedStream* aMsg)
     iDitch = true;
     iProfileIndex = -1;
 }
-
-TBool DriverAlsa::Pimpl::TryProfile(Profile& aProfile, TUint aBitDepth,
-                                    TUint aNumChannels, TUint aSampleRate,
+TBool DriverAlsa::Pimpl::TryProfile(Profile& aProfile,
+                                    TUint aBitDepth,
+                                    TUint aNumChannels,
+                                    TUint aSampleRate,
                                     TUint aBufferUs)
 {
     auto outputFormat = aProfile.GetFormat(aBitDepth);
 
-    if (iDuplicateChannel)
-    {
-        // We are manually converting a mono input to stereo.
-        // Configure the stream for stereo.
+    if (iDuplicateChannel) {
         aNumChannels *= 2;
     }
 
-    auto err = snd_pcm_set_params(iHandle,
-                                  outputFormat.first,
-                                  SND_PCM_ACCESS_RW_INTERLEAVED,
-                                  aNumChannels,
-                                  aSampleRate,
-                                  0,             // no soft-resample
-                                  aBufferUs);
-    return err == 0;
-}
+    snd_pcm_hw_params_t* hwParams;
+    snd_pcm_sw_params_t* swParams;
+    snd_pcm_hw_params_alloca(&hwParams);
+    snd_pcm_sw_params_alloca(&swParams);
 
+    int err = snd_pcm_hw_params_any(iHandle, hwParams);
+    if (err < 0) return false;
+
+    err = snd_pcm_hw_params_set_access(iHandle, hwParams,
+                                       SND_PCM_ACCESS_RW_INTERLEAVED);
+    if (err < 0) return false;
+
+    err = snd_pcm_hw_params_set_format(iHandle, hwParams,
+                                       outputFormat.first);
+    if (err < 0) return false;
+
+    err = snd_pcm_hw_params_set_channels(iHandle, hwParams,
+                                         aNumChannels);
+    if (err < 0) return false;
+
+    unsigned int rate = aSampleRate;
+    err = snd_pcm_hw_params_set_rate_near(iHandle, hwParams, &rate, nullptr);
+    if (err < 0 || rate != aSampleRate) return false;
+
+    unsigned int bufferTime = aBufferUs;
+    err = snd_pcm_hw_params_set_buffer_time_near(iHandle,
+                                                 hwParams,
+                                                 &bufferTime,
+                                                 nullptr);
+    if (err < 0) return false;
+
+    // Réglage plus adapté SPI / embarqué :
+    // plusieurs petites périodes dans un buffer assez confortable.
+    unsigned int periodTime = bufferTime / 8;
+    if (periodTime < 10000) {
+        periodTime = 10000; // 10 ms minimum
+    }
+
+    err = snd_pcm_hw_params_set_period_time_near(iHandle,
+                                                 hwParams,
+                                                 &periodTime,
+                                                 nullptr);
+    if (err < 0) return false;
+
+    err = snd_pcm_hw_params(iHandle, hwParams);
+    if (err < 0) return false;
+
+    snd_pcm_uframes_t bufferSize = 0;
+    snd_pcm_uframes_t periodSize = 0;
+
+    snd_pcm_hw_params_get_buffer_size(hwParams, &bufferSize);
+    snd_pcm_hw_params_get_period_size(hwParams, &periodSize, nullptr);
+
+    err = snd_pcm_sw_params_current(iHandle, swParams);
+    if (err < 0) return false;
+
+    err = snd_pcm_sw_params_set_start_threshold(iHandle,
+                                                swParams,
+                                                periodSize);
+    if (err < 0) return false;
+
+    err = snd_pcm_sw_params_set_avail_min(iHandle,
+                                          swParams,
+                                          periodSize);
+    if (err < 0) return false;
+
+    err = snd_pcm_sw_params(iHandle, swParams);
+    if (err < 0) return false;
+
+    err = snd_pcm_prepare(iHandle);
+    if (err < 0) return false;
+
+    Log::Print("DriverAlsa: configured ALSA: rate=%u channels=%u "
+               "format=%d buffer=%lu frames period=%lu frames\n",
+               rate,
+               aNumChannels,
+               outputFormat.first,
+               bufferSize,
+               periodSize);
+
+    return true;
+}
 TUint DriverAlsa::Pimpl::DriverDelayJiffies(TUint aSampleRate)
 {
-    snd_pcm_sframes_t dp;
-    int ret;
-
-    if (!aSampleRate) {
+    if (!aSampleRate || iProfileIndex == -1) {
         return 0;
     }
 
-    // Verify the supplied sample rate is supported.
-    snd_pcm_hw_params_t *hwParams;
-    TUint                err;
+    snd_pcm_sframes_t delayFrames = 0;
+    int ret = snd_pcm_delay(iHandle, &delayFrames);
 
-    snd_pcm_hw_params_alloca(&hwParams);
-    err = snd_pcm_hw_params_any(iHandle, hwParams);
-    if (err < 0)
-    {
-        Log::Print("DriverAlsa: Cannot get hardware parameters: %s\n",
-                   snd_strerror(err));
-
-        THROW(SampleRateUnsupported);
-    }
-
-    if (snd_pcm_hw_params_test_rate(iHandle, hwParams, aSampleRate, 0) < 0)
-    {
-        THROW(SampleRateUnsupported);
-    }
-
-    ret = snd_pcm_delay(iHandle, &dp);
     if (ret < 0) {
-        Log::Print("DriverAlsa: snd_pcm_delay() error : %s\n",
-                   snd_strerror(ret));
-        return 0;
+        ret = snd_pcm_recover(iHandle, ret, 1);
+        if (ret < 0) {
+            OhLog::PrintError("DriverAlsa: snd_pcm_delay() error: %s\n",
+                              snd_strerror(ret));
+            return 0;
+        }
+
+        ret = snd_pcm_delay(iHandle, &delayFrames);
+        if (ret < 0) {
+            return 0;
+        }
     }
 
-    Log::Print("DriverAlsa: snd_pcm_delay() : %u\n", dp);
-    return dp * Jiffies::PerSample(aSampleRate);
-}
+    if (delayFrames < 0) {
+        delayFrames = 0;
+    }
 
+    return (TUint)delayFrames * Jiffies::PerSample(aSampleRate);
+}
 
 // DriverAlsa
 
@@ -955,7 +1060,11 @@ DriverAlsa::~DriverAlsa()
     delete iThread;
     delete iPimpl;
 }
-
+void DriverAlsa::PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const
+{
+    aPcm = 192000;
+    aDsd = 5644800;
+}
 void DriverAlsa::AudioThread()
 {
     try
@@ -993,14 +1102,30 @@ TUint DriverAlsa::PipelineAnimatorDelayJiffies(AudioFormat aFormat,
     return iPimpl->DriverDelayJiffies(aSampleRate);
 }
 
-TUint DriverAlsa::PipelineAnimatorDsdBlockSizeWords() const
-{
-	return 0;
-}
-
 TUint DriverAlsa::PipelineAnimatorMaxBitDepth() const
 {
     return 0;
+}
+
+void DriverAlsa::PipelineAnimatorDsdBlockConfiguration(TUint& aSampleBlockWords, 
+                                                       TUint& aPadBytesPerChunk) const
+{
+    aSampleBlockWords=0;
+    aPadBytesPerChunk=0;
+}
+
+
+
+void DriverAlsa::PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const
+{
+    aPcm=0;
+    aDsd=0;
+}
+
+void DriverAlsa::PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const
+{
+    aPcm = 192000;
+    aDsd = 5644800;
 }
 
 Msg* DriverAlsa::ProcessMsg(MsgHalt* aMsg)
@@ -1044,3 +1169,6 @@ Msg* DriverAlsa::ProcessMsg(MsgDrain* aMsg)
 
     return aMsg;
 }
+
+
+
