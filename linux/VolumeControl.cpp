@@ -4,18 +4,86 @@
 
 #include <alsa/asoundlib.h>
 #include <math.h>
-#include <OpenHome/Private/Printer.h>
-#include "VolumeControl.h"
+
+#include "Volume.h"
 
 using namespace OpenHome;
 using namespace OpenHome::Av;
 using namespace OpenHome::Media;
 
+// RebootLogger
+void RebootLogger::Reboot(const Brx& aReason)
+{
+    Log::Print("\n\n\nRebootLogger::Reboot. Reason:\n%.*s\n\n\n",
+               PBUF(aReason));
+}
+
+TUint VolumeProfile::VolumeMax() const
+{
+    return kVolumeMax;
+}
+
+TUint VolumeProfile::VolumeDefault() const
+{
+    return kVolumeDefault;
+}
+
+TUint VolumeProfile::VolumeUnity() const
+{
+    return kVolumeUnity;
+}
+
+TUint VolumeProfile::VolumeDefaultLimit() const
+{
+    return kVolumeDefaultLimit;
+}
+
+TUint VolumeProfile::VolumeStep() const
+{
+    return kVolumeStep;
+}
+
+TUint VolumeProfile::VolumeMilliDbPerStep() const
+{
+    return kVolumeMilliDbPerStep;
+}
+
+TUint VolumeProfile::ThreadPriority() const
+{
+	return kThreadPriority;
+}
+
+TUint VolumeProfile::BalanceMax() const
+{
+    return kBalanceMax;
+}
+
+TUint VolumeProfile::FadeMax() const
+{
+    return kFadeMax;
+}
+
+TUint VolumeProfile::OffsetMax() const
+{
+	return kOffsetMax;
+}
+
+TBool VolumeProfile::AlwaysOn() const
+{
+    return kAlwaysOn;
+}
+
+IVolumeProfile::StartupVolume VolumeProfile::StartupVolumeConfig() const
+{
+    return StartupVolume::LastUsed;
+}
+
+
 VolumeControl::VolumeControl()
 {
     const TChar *CARD          = "default";
     const TChar *SELEM_NAMES[] = {"Digital", "PCM", "Master"};
-    Log::Print("%s:%d\n", __FILE__, __LINE__);
+
     // Get the mixer element for the default sound card.
     snd_mixer_open(&iHandle, 0);
     snd_mixer_attach(iHandle, CARD);
@@ -37,7 +105,7 @@ VolumeControl::VolumeControl()
         iElem = snd_mixer_find_selem(iHandle, iSid);
 
         // Quit the loop if control found.
-        if (iElem != NULL)
+        if (IsVolumeSupported())
         {
             break;
         }
@@ -69,7 +137,7 @@ void VolumeControl::SetVolume(TUint aVolume)
     {
         return;
     }
-    Log::Print("Volume : %u\n", aVolume );
+
     volume = double((aVolume / MILLI_DB_PER_STEP)/100.0f);
 
     // Use the dB range to map the volume to a scale more in tune
@@ -109,9 +177,19 @@ void VolumeControl::SetVolume(TUint aVolume)
     return;
 }
 
-void VolumeControl::SetBalance(TInt /*aBalance*/)
+void VolumeControl::SetBalance(TInt aBalance)
 {
-    // Not Implemented
+    long left, right;
+        // Sanity Check
+    if (! IsVolumeSupported())
+    {
+        return;
+    }
+    snd_mixer_selem_get_playback_dB(iElem, SND_MIXER_SCHN_FRONT_LEFT,&left);
+    snd_mixer_selem_get_playback_dB(iElem, SND_MIXER_SCHN_FRONT_RIGHT, &right);
+ 
+    snd_mixer_selem_set_playback_dB(iElem, SND_MIXER_SCHN_FRONT_LEFT, 0.25*left, 0);
+    snd_mixer_selem_set_playback_dB(iElem, SND_MIXER_SCHN_FRONT_RIGHT, 0.75*right, 0);
 }
 
 void VolumeControl::SetFade(TInt /*aFade*/)

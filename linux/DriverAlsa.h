@@ -41,10 +41,13 @@ private: // from IMsgProcessor
 private: // from IPipelineAnimator
     TUint PipelineAnimatorBufferJiffies() const override;
     TUint PipelineAnimatorDelayJiffies(AudioFormat aFormat, TUint aSampleRate,
-                                       TUint aBitDepth, TUint aNumChannels) const override;
-    TUint PipelineAnimatorDsdBlockSizeWords() const override;
+									   TUint aBitDepth, TUint aNumChannels) const override;
     TUint PipelineAnimatorMaxBitDepth() const override;
-    void  PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const override;
+
+    void PipelineAnimatorDsdBlockConfiguration(TUint& aSampleBlockWords, 
+                                               TUint& aPadBytesPerChunk) const override;
+    void PipelineAnimatorGetMaxSampleRates(TUint& aPcm, TUint& aDsd) const override;
+
 private:
     class Pimpl;
     Pimpl* iPimpl;
